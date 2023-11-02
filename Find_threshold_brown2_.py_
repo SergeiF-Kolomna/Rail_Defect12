@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import PySimpleGUI as sg
-import Normalization_image as NormImg  # Для изменения размера выбранного фото до фото с гранью 700 пикселей
 
 point1 = None
 point2 = None
@@ -193,10 +192,13 @@ def main():
         image = cv2.imread(image_path)
         
         #compress image
-        image_mini = NormImg.main_resize(image, 700)  # Изменяем размер до размера минимальной грани 700 пкс
-        
+        width = int(image.shape[1] * scale_percent / 100)
+        height = int(image.shape[0] * scale_percent / 100)
+        dim = (width, height)
+        image_mini = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
         image_mini = white_balance(image_mini)
-        cv2.namedWindow("Identified defects")#, cv2.WINDOW_KEEPRATIO)
+        cv2.namedWindow("Identified defects")
+	#cv2.namedWindow("Identified defects", cv2.WINDOW_KEEPRATIO)
         cv2.setMouseCallback("Identified defects", mouse_callback)
         #cv2.createTrackbar("Threshold", "Identified defects", threshold_value, 255, on_trackbar)
         cv2.createTrackbar("LH", "Identified defects", 0, 255, on_trackbar)

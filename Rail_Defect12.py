@@ -3,7 +3,7 @@ import numpy as np
 import PySimpleGUI as sg        # интерфейс
 import Find_threshold_brown2 as ft     # самописный
 import os       #для извлечения имени файла из пути
-import Add_spot2 as ast
+import Add_spot2 as ast     # Для добавления области
 import random
 
 # -*- coding: utf-8 -*-
