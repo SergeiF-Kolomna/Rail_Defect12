@@ -3,7 +3,8 @@ import numpy as np
 import PySimpleGUI as sg        # интерфейс
 import Find_threshold_brown2 as ft     # самописный
 import os       #для извлечения имени файла из пути
-import Add_spot as ast
+import Add_spot2 as ast
+import random
 
 # -*- coding: utf-8 -*-
 
@@ -52,40 +53,51 @@ if dark_spots:
         (x, y, w, h, dimensions) = dark_spot
         cv2.rectangle(ttemp_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (0, 255, 0), 2)
     file_name= os.path.basename(file_path)
+    firststep = True
     while True:
         if key == ord("q"):
             break
         sum=0
         e,v=window_list.read()
-        if  v['list1'] == [] or v['list1'] == ['0']:
-            v['list1']=str(ipass)
-        print(e, v, ' ipass > ', ipass)
+        #if  v['list1'] == [] or v['list1'] == ['0']:
+        #    v['list1']=str(ipass)
+        
 
         temp_list=list(dark_spots_dict.keys())
-        v['list1']=str(temp_list[int(ipass)])
+        try:
+            v['list1']=str(temp_list[int(ipass)])
+        except:
+            v['list1']=str(random.choice(temp_list))
+        print(e, v, ' ipass > ', ipass)
 
         if e == 'Remove':
-            names.remove(v['list1'])
-            dark_spots_dict.pop(int(v['list1']))
-            window_list['list1'].update(names)
-            temp_list=list(dark_spots_dict.keys())
-            temp2_image = image_mini.copy()
-            for new_spot_list in dark_spots_dict:
-                (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]
-                cv2.rectangle(temp2_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (235, 0, 255), 2)
-            ipass-=1
+            if len(dark_spots_dict)>1:
+                names.remove(v['list1'])
+                dark_spots_dict.pop(int(v['list1']))
+                window_list['list1'].update(names)
+                temp_list=list(dark_spots_dict.keys())
+                temp2_image = image_mini.copy()
+                for new_spot_list in dark_spots_dict:
+                    (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]
+                    cv2.rectangle(temp2_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (235, 0, 255), 2)
+                if ipass>=1:
+                    ipass-=1
+                else:
+                    ipass=len(dark_spots_dict)-1
+            else:
+                pass
         elif e == 'Add':
-            #try:
+            try:
                 max_num = [max(dark_spots_dict.items(), key=lambda k_v: k_v[0])][0][0]
-                dark_spots_dict[max_num+1]=ast.main('Identified defects', temp_image, pixel_per_cm, LH, LS, LV, UH, US, UV)
+                test, x_add, y_add, contour_add = ast.main('Identified defects', temp2_image, pixel_per_cm, LH, LS, LV, UH, US, UV)
+                dark_spots_dict[max_num+1] = (test[0]+x_add-frame_start[0], test[1]+y_add-frame_start[1], test[2], test[3], test[4])
                 
                 for new_spot_list in dark_spots_dict:
                     (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]
                     cv2.rectangle(temp2_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (235, 0, 255), 2)
-            #except:
-            #    pass
-
-            
+            except:
+                sg.popup_auto_close('Либо нет дефектов в окне, либо dark_spot_dict пустой ')
+                pass
         elif e == 'Cancel':
             window_list.close()
             break
@@ -97,7 +109,7 @@ if dark_spots:
             temp_list=list(dark_spots_dict.keys())
             v['list1']=str(temp_list[ipass])
         elif e == 'Back':
-            if ipass>1:
+            if ipass>=1:
                 ipass-=1
             else:
                 ipass=len(dark_spots_dict)-1
@@ -137,21 +149,25 @@ if dark_spots:
 
         #  /// окончание куска кода для  отображения окошка со списком найденных дефектов
         temp_list=list(dark_spots_dict.keys())
-        v['list1']=str(temp_list[ipass])
+        try:
+            v['list1']=str(temp_list[ipass])
+        except:
+            v['list1']=str(random.choice(temp_list))
         (x, y, w, h, dimensions) = dark_spots_dict[int(v['list1'])]
 
-        temp_image = ttemp_image.copy()
-        cv2.rectangle(temp_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (0, 0, 255), 2)
+        result_image = ttemp_image.copy()
+        cv2.rectangle(result_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (0, 0, 255), 2)
         
         # Add dimensions text to the dark spot
         width_cm = w / (calculate_distance(point1, point2)/etalon_line)
         height_cm = h / (calculate_distance(point1, point2)/etalon_line)
-        cv2.putText(temp_image, f"Square: {dimensions:.3f} cm^2", (x + frame_start[0], y + frame_start[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        cv2.putText(temp_image, f"Width: {width_cm:.3f} cm", (x + frame_start[0], y + frame_start[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        cv2.putText(temp_image, f"Height: {height_cm:.3f} cm", (x + frame_start[0], y + frame_start[1] + h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(result_image, f"Square: {dimensions:.3f} cm^2", (x + frame_start[0], y + frame_start[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(result_image, f"Width: {width_cm:.3f} cm", (x + frame_start[0], y + frame_start[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(result_image, f"Height: {height_cm:.3f} cm", (x + frame_start[0], y + frame_start[1] + h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-        cv2.imshow("Identified defects", temp_image)
+        cv2.imshow("Identified defects", result_image)
         try:
+            #cv2.namedWindow("Result", cv2.WINDOW_KEEPRATIO)
             cv2.imshow("Result", temp2_image)
         except: pass
 

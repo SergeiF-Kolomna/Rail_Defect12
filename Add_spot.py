@@ -7,7 +7,7 @@ start_point = None
 end_point = None
 clicked = False
 hsv_lower = np.array([0, 0, 0])  # Initial HSV lower threshold
-hsv_upper = np.array([255, 255, 255])  # Initial HSV upper threshold
+hsv_upper = np.array([120, 130, 140])  # Initial HSV upper threshold
 img = None
 pixel_per_cm = 10
 
@@ -63,6 +63,8 @@ def main(WindowName, image, pixel_per_cm, hl, sl, vl, hu, su, vu):
             # Find contours in the thresholded image
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+            max_contour = max(contours, key = cv2.contourArea)
+
             #for contour in contours:
                 # Calculate linear dimensions and area of each dark spot
                 #perimeter = cv2.arcLength(contour, True)
@@ -70,29 +72,29 @@ def main(WindowName, image, pixel_per_cm, hl, sl, vl, hu, su, vu):
             area = cv2.contourArea(max(contours, key=cv2.contourArea))
 
                 # Draw the contour and display dimensions and area
-                #cv2.drawContours(selected_area, [contour], -1, (0, 0, 255), 2)
+            cv2.drawContours(selected_area, max_contour, -1, (0, 0, 255), 2)
 
             (x, y, w, h) = cv2.boundingRect(max(contours, key=cv2.contourArea))
                 
             a = (x, y, w, h, area)
-                #cv2.putText(
-                #    selected_area,
-                #    f"Perimeter: {perimeter:.2f} pixels",
-                #    (10, 30),
-                #    cv2.FONT_HERSHEY_SIMPLEX,
-                #    0.6,
-                #    (0, 0, 255),
-                #    2,
-                #)
-                #cv2.putText(
-                #    selected_area,
-                #    f"Area: {area:.2f} pixels^2",
-                #    (10, 60),
-                #    cv2.FONT_HERSHEY_SIMPLEX,
-                #    0.6,
-                #    (0, 0, 255),
-                #    2,
-                #)
+            #cv2.putText(
+            #    selected_area,
+            #    f"Perimeter: {perimeter:.2f} pixels",
+            #    (10, 30),
+            #    cv2.FONT_HERSHEY_SIMPLEX,
+            #    0.6,
+            #    (0, 0, 255),
+            #    2,
+            #)
+            #cv2.putText(
+            #    selected_area,
+            #    f"Area: {area:.2f} pixels^2",
+            #    (10, 60),
+            #    cv2.FONT_HERSHEY_SIMPLEX,
+            #    0.6,
+            #    (0, 0, 255),
+            #    2,
+            #)
 
         cv2.imshow(WindowName, clone)
 
@@ -100,14 +102,17 @@ def main(WindowName, image, pixel_per_cm, hl, sl, vl, hu, su, vu):
         if key == 27:  # Press 'Esc' to exit
             break
 
-    return a
+    return a, start_point[0], start_point[1], max_contour
 
     cv2.destroyAllWindows()
-
+    a = None
+    x = 0
+    y = 0
+    max_contour = None
 if __name__ == "__main__":
     img = cv2.imread('test2.jpg')
     cv2.namedWindow('Image')
 
-    b = main('Image', img, 10, 0, 0, 0, 150, 130, 130)
+    b, x1, y1, cont = main('Image', img, 10, 0, 0, 0, 150, 130, 130)
 
 cv2.destroyAllWindows()
