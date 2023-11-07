@@ -5,6 +5,7 @@ import Find_threshold_brown2 as ft     # самописный
 import os       #для извлечения имени файла из пути
 import Add_spot2 as ast     # Для добавления области
 import random
+import json
 
 # -*- coding: utf-8 -*-
 
@@ -24,6 +25,24 @@ len_def_sum = 0     # variable for summary defects length
 
 def calculate_distance(p1, p2):
     return (p2[0] - p1[0]) 
+
+def read_ini_file(filename):
+    path=''
+    try:
+        f = open(filename, mode='rt')
+        path = f.read()
+        f.close()
+    except FileNotFoundError:
+        sg.popup_error_with_traceback('Файл result.ini не найден')
+    return (path)
+
+def read_json_file(filename):
+    foldername_path = filename
+    with open(foldername_path) as f:
+        folder_name = json.load(f)
+        print (f"название директории {folder_name} подгружено в основной проге")
+    return (folder_name)
+
    
 try:
     threshold_value, image_mini, dark_spots, frame_start, frame_end, point1, point2, file_path, LH, LS, LV, UH, US, UV, pixel_per_cm = ft.main()
@@ -132,8 +151,10 @@ if dark_spots:
             for j in dark_spots_dict:
                 len_def_sum += dark_spots_dict[j][2]/(calculate_distance(point1, point2)/etalon_line)
             # save text table
+            destination_path = read_json_file('folder.json')
+            #destination_path = read_ini_file('result.ini')
             my_txt_file_name = file_name.replace('.jpg', '.txt')
-            my_txt_file = open('E:/AAA/Defect19/' + my_txt_file_name, "w+")
+            my_txt_file = open(destination_path + my_txt_file_name, "w+")
             my_txt_file.write('Имя файла ' + '\t' + ' Обнаружено дефектов ' + '\t' + ' Общая площадь дефектов,кв.см. ' + '\t' + ' Средняя площадь дефекта,кв.см. '+ '\t' + 'Общая длина дефектов' + '\t' + ' Настройки HSV нижние - HSV верхние ' + '\n')
             my_txt_file.write(my_txt_file_name + '\t' + str(len(dark_spots_dict)) + '\t' + str("{:.2f}".format(sum)) + "\t" + str("{:.2f}".format(sum/len(dark_spots_dict))) + "\t" + str("{:.2f}".format(len_def_sum)) + "\t"
                               + ' ' + str(LH) + ' ' + str(LS) + ' ' + str(LV) + ' ' + str(UH) + ' ' + str(US) + ' ' + str(UV)+ '\n')
@@ -143,7 +164,7 @@ if dark_spots:
             my_txt_file.close()
             # save image with rectangles
             my_jpg_file_name = '_'+file_name
-            isWritten = cv2.imwrite('E:/AAA/Defect19/' + my_jpg_file_name, temp2_image)
+            isWritten = cv2.imwrite(destination_path + my_jpg_file_name, temp2_image)
             if isWritten: print('Image is successfully saved as _'+ my_jpg_file_name+' *.jpg file.')
             len_def_sum = 0
 

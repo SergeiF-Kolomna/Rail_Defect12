@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import PySimpleGUI as sg
 import Normalization_image as NormImg  # Для изменения размера выбранного фото до фото с гранью 700 пикселей
-import json
 
 point1 = None
 point2 = None
@@ -174,17 +173,13 @@ def nothing(x):
 def main():
     global image, image_mini, dark_spots
     #Open file window
-    foldername_path ='folder.json'
-    try:
-        with open(foldername_path) as f:
-            folder_name = json.load(f)
-            print (f"название директории {folder_name} подгружено с прошлого раза")
-    except:
-        folder_name = 'c:/'
+    #rb=[]
+    #rb.append(sg.Radio("THRESH_BINARY", "my_group", key='TB', default=True))
+    #rb.append(sg.Radio("THRESH_BINARY_INV", "my_group", key='TBI'))
     layout = [
                 [sg.Text('File'), sg.InputText(), sg.FileBrowse()],
                 [sg.Submit(), sg.Cancel()],
-                [sg.Text('Folder for save'), sg.InputText(folder_name), sg.FolderBrowse()],
+     #           [rb]
              ]
     window = sg.Window('Open file to find defects', layout)
 
@@ -193,15 +188,7 @@ def main():
     #pixel_per_cm = calculate_distance(point1, point2) / etalon_line
 
     if event == 'Submit':
-        image_path = values[0]
-        
-        #save result folder path
-        try:
-            with open(foldername_path, 'w') as f:
-                json.dump(values[1], f)
-                print(f"Путь к директории {values[1]} обновлён!")
-        except:
-            pass
+        image_path = values[0] 
 
         image = cv2.imread(image_path)
         
