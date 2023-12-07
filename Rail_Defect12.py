@@ -21,6 +21,7 @@ dark_spots_dict = {}
 sum=0
 ipass = 0
 len_def_sum = 0     # variable for summary defects length
+no_defects=False
 
 
 def calculate_distance(p1, p2):
@@ -40,8 +41,9 @@ def read_json_file(filename):
     foldername_path = filename
     with open(foldername_path) as f:
         folder_name = json.load(f)
-        print (f"название директории {folder_name} подгружено в основной проге")
+        print (f"название директории {folder_name} подгружено в основной программе")
     return (folder_name)
+
 
    
 try:
@@ -63,9 +65,8 @@ if dark_spots:
     layout_lst = [[sg.Text('Rail',size=(20, 1), font='Lucida',justification='left')],
                     [sg.Listbox(names, select_mode='single', key='list1', size=(30, 6))],
                     [sg.Button('Remove', font=('Times New Roman', 12)), sg.Button('Add', font=('Times New Roman', 12)), sg.Button('Cancel', font=('Times New Roman',12)), 
-                     sg.Button('Back', font=('Times New Roman',12)), sg.Button('Next', font=('Times New Roman',12)), sg.Button('Calculate', font=('Times New Roman',12))]]
+                     sg.Button('Back', font=('Times New Roman',12)), sg.Button('Next', font=('Times New Roman',12)), sg.Button('No_defects', font=('Times New Roman',12)), sg.Button('Calculate', font=('Times New Roman',12))]]
     window_list=sg.Window('Defects', layout_lst)
-    #first_enter =True
 
     ttemp_image = image_mini.copy()
     for dark_spot in dark_spots:
@@ -78,9 +79,6 @@ if dark_spots:
             break
         sum=0
         e,v=window_list.read()
-        #if  v['list1'] == [] or v['list1'] == ['0']:
-        #    v['list1']=str(ipass)
-        
 
         temp_list=list(dark_spots_dict.keys())
         try:
@@ -106,6 +104,7 @@ if dark_spots:
             else:
                 pass
         elif e == 'Add':
+            no_defects=False
             try:
                 max_num = [max(dark_spots_dict.items(), key=lambda k_v: k_v[0])][0][0]
                 test, x_add, y_add, contour_add = ast.main('Identified defects', temp2_image, pixel_per_cm, LH, LS, LV, UH, US, UV)
@@ -134,39 +133,64 @@ if dark_spots:
                 ipass=len(dark_spots_dict)-1
             temp_list=list(dark_spots_dict.keys())
             v['list1']=str(temp_list[ipass])
+        elif e == 'No_defects':
+            no_defects=True
         elif e == 'Calculate':
-            for i in dark_spots_dict:
-                sum += dark_spots_dict[i][4]
-            try:
-                cv2.putText(temp2_image, f"Summary Square: {sum:.3f} cm^2", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 3)
-                cv2.putText(temp2_image, 'Number of defects: '+ str(len(dark_spots_dict)) + ' pcs', (100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
-            except:
-                temp2_image = image_mini.copy()
-                for new_spot_list in dark_spots_dict:
-                    (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]
-                    cv2.rectangle(temp2_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (235, 0, 255), 2)
-                cv2.putText(temp2_image, f"Summary Square: {sum:.3f} cm^2", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
-                cv2.putText(temp2_image, 'Number of defects: '+ str(len(dark_spots_dict)) + ' pcs', (100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
-            # calculate summary defects length
-            for j in dark_spots_dict:
-                len_def_sum += dark_spots_dict[j][2]/(calculate_distance(point1, point2)/etalon_line)
-            # save text table
-            destination_path = read_json_file('folder.json')
-            #destination_path = read_ini_file('result.ini')
-            my_txt_file_name = file_name.replace('.jpg', '.txt')
-            my_txt_file = open(destination_path + my_txt_file_name, "w+")
-            my_txt_file.write('Имя файла ' + '\t' + ' Обнаружено дефектов ' + '\t' + ' Общая площадь дефектов,кв.см. ' + '\t' + ' Средняя площадь дефекта,кв.см. '+ '\t' + 'Общая длина дефектов' + '\t' + ' Настройки HSV нижние - HSV верхние ' + '\n')
-            my_txt_file.write(my_txt_file_name + '\t' + str(len(dark_spots_dict)) + '\t' + str("{:.2f}".format(sum)) + "\t" + str("{:.2f}".format(sum/len(dark_spots_dict))) + "\t" + str("{:.2f}".format(len_def_sum)) + "\t"
-                              + ' ' + str(LH) + ' ' + str(LS) + ' ' + str(LV) + ' ' + str(UH) + ' ' + str(US) + ' ' + str(UV)+ '\n')
-            my_txt_file.write('Номер дефекта' + '\t' + 'Длина' + '\t' + 'Ширина' + '\t' + 'Площадь' + '\n')
-            for j in dark_spots_dict:
-                my_txt_file.write(str(j) + '\t' + str("{:.2f}".format(dark_spots_dict[j][2]/(calculate_distance(point1, point2)/etalon_line))) + '\t' + str("{:.2f}".format(dark_spots_dict[j][3]/(calculate_distance(point1, point2)/etalon_line))) + '\t' + str("{:.2f}".format(dark_spots_dict[j][4])) + '\n')
-            my_txt_file.close()
-            # save image with rectangles
-            my_jpg_file_name = '_'+file_name
-            isWritten = cv2.imwrite(destination_path + my_jpg_file_name, temp2_image)
-            if isWritten: print('Image is successfully saved as _'+ my_jpg_file_name+' *.jpg file.')
-            len_def_sum = 0
+            if no_defects:
+                try:
+                    cv2.putText(temp2_image, f"Summary Square: 0 cm^2", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 3)
+                    cv2.putText(temp2_image, 'Number of defects: 0 pcs', (100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
+                except:
+                    temp2_image = image_mini.copy()
+                    cv2.putText(temp2_image, f"Summary Square: 0 cm^2", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
+                    cv2.putText(temp2_image, 'Number of defects: 0 pcs', (100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
+                
+                destination_path = read_json_file('folder.json')
+                my_txt_file_name = file_name.replace('.jpg', '.txt')
+                my_txt_file = open(destination_path + my_txt_file_name, "w+")
+                my_txt_file.write('Имя файла ' + '\t' + ' Обнаружено дефектов ' + '\t' + ' Общая площадь дефектов,кв.см. ' + '\t' + ' Средняя площадь дефекта,кв.см. '+ '\t' + 'Общая длина дефектов' + '\t' + ' Настройки HSV нижние - HSV верхние ' + '\n')
+                my_txt_file.write(my_txt_file_name + '\t' + '0' + '\t' + '0' + "\t" + '0' + "\t" + '0' + "\t"
+                                  + ' ' + str(LH) + ' ' + str(LS) + ' ' + str(LV) + ' ' + str(UH) + ' ' + str(US) + ' ' + str(UV)+ '\n')
+                my_txt_file.close()
+                # save image with rectangles
+                my_jpg_file_name = '_'+file_name
+                isWritten = cv2.imwrite(destination_path + my_jpg_file_name, temp2_image)
+                if isWritten: print('Image is successfully saved as _'+ my_jpg_file_name+' *.jpg file.')
+                len_def_sum = 0
+
+            else:
+                for i in dark_spots_dict:
+                    sum += dark_spots_dict[i][4]
+                try:
+                    cv2.putText(temp2_image, f"Summary Square: {sum:.3f} cm^2", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 3)
+                    cv2.putText(temp2_image, 'Number of defects: '+ str(len(dark_spots_dict)) + ' pcs', (100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
+                except:
+                    temp2_image = image_mini.copy()
+                    for new_spot_list in dark_spots_dict:
+                        (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]
+                        cv2.rectangle(temp2_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (235, 0, 255), 2)
+                    cv2.putText(temp2_image, f"Summary Square: {sum:.3f} cm^2", (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
+                    cv2.putText(temp2_image, 'Number of defects: '+ str(len(dark_spots_dict)) + ' pcs', (100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (235, 0, 255), 2)
+                # calculate summary defects length
+                for j in dark_spots_dict:
+                    len_def_sum += dark_spots_dict[j][2]/(calculate_distance(point1, point2)/etalon_line)
+                # save text table
+                destination_path = read_json_file('folder.json')
+                #destination_path = read_ini_file('result.ini')
+                my_txt_file_name = file_name.replace('.jpg', '.txt')
+                my_txt_file = open(destination_path + my_txt_file_name, "w+")
+                my_txt_file.write('Имя файла ' + '\t' + ' Обнаружено дефектов ' + '\t' + ' Общая площадь дефектов,кв.см. ' + '\t' + ' Средняя площадь дефекта,кв.см. '+ '\t' + 'Общая длина дефектов' + '\t' + ' Настройки HSV нижние - HSV верхние ' + '\n')
+                my_txt_file.write(my_txt_file_name + '\t' + str(len(dark_spots_dict)) + '\t' + str("{:.2f}".format(sum)) + "\t" + str("{:.2f}".format(sum/len(dark_spots_dict))) + "\t" + str("{:.2f}".format(len_def_sum)) + "\t"
+                                  + ' ' + str(LH) + ' ' + str(LS) + ' ' + str(LV) + ' ' + str(UH) + ' ' + str(US) + ' ' + str(UV)+ '\n')
+                my_txt_file.write('Номер дефекта' + '\t' + 'Длина' + '\t' + 'Ширина' + '\t' + 'Площадь' + '\n')
+                for j in dark_spots_dict:
+                    my_txt_file.write(str(j) + '\t' + str("{:.2f}".format(dark_spots_dict[j][2]/(calculate_distance(point1, point2)/etalon_line))) + '\t' + str("{:.2f}".format(dark_spots_dict[j][3]/(calculate_distance(point1, point2)/etalon_line))) + '\t' + str("{:.2f}".format(dark_spots_dict[j][4])) + '\n')
+                my_txt_file.close()
+                # save image with rectangles
+                my_jpg_file_name = '_'+file_name
+                isWritten = cv2.imwrite(destination_path + my_jpg_file_name, temp2_image)
+                if isWritten: print('Image is successfully saved as _'+ my_jpg_file_name+' *.jpg file.')
+                len_def_sum = 0
 
         #  /// окончание куска кода для  отображения окошка со списком найденных дефектов
         temp_list=list(dark_spots_dict.keys())
@@ -188,7 +212,6 @@ if dark_spots:
 
         cv2.imshow("Identified defects", result_image)
         try:
-            #cv2.namedWindow("Result", cv2.WINDOW_KEEPRATIO)
             cv2.imshow("Result", temp2_image)
         except: pass
 
