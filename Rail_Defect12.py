@@ -108,21 +108,23 @@ if dark_spots:
             no_defects=False
             try:
                 max_num = [max(dark_spots_dict.items(), key=lambda k_v: k_v[0])][0][0]
-                #test, x_add, y_add, contour_add = ast.main('Identified defects', temp2_image, pixel_per_cm, LH, LS, LV, UH, US, UV)
-                #dark_spots_dict[max_num+1] = (test[0]+x_add-frame_start[0], test[1]+y_add-frame_start[1], test[2], test[3], test[4])
-                init_x, init_y, new_contour = asn.main('Identified defects', temp2_image)
+                init_x, init_y, new_contour = asn.main('Identified defects', ttemp_image)
                 
                 area = cv2.contourArea(new_contour)
                 dimensions = ft.calculate_area(area, pixel_per_cm)
                 (x, y, w, h) = cv2.boundingRect(new_contour)
                 dark_spots_dict[max_num+1] = (init_x-frame_start[0]+x, init_y-frame_start[1]+y, w, h, dimensions)
-                #dark_spots_in_frame.append((x, y, w, h, dimensions))
                 
+                #проверяем существование картинки с итоговым набором дефектов temp2_image.Если её нет, то создаем
+                if 'temp2_image' not in locals():
+                    temp2_image = image_mini.copy()
+                else:
+                    pass
                 for new_spot_list in dark_spots_dict:
                     (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]
                     cv2.rectangle(temp2_image, (x + frame_start[0], y + frame_start[1]), (x + frame_start[0] + w, y + frame_start[1] + h), (235, 0, 255), 2)
             except:
-                sg.popup_auto_close('Либо нет дефектов в окне, либо dark_spot_dict пустой ')
+                sg.popup_auto_close('Нет дефектов в окне')
                 pass
         elif e == 'Cancel':
             window_list.close()
