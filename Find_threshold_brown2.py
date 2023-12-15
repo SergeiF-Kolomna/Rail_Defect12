@@ -232,9 +232,6 @@ def main():
         first_enter=False #  bool variable for once fill the list
         ipass = 0       # variable for pass in listBox
 
-        # Оповещение-подсказка
-        # sg.popup_auto_close('Select area and press <a> on keyboard')
-
         while True:
             cv2.imshow("Identified defects", image_mini)
             try:

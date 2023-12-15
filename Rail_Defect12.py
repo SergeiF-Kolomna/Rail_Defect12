@@ -6,6 +6,7 @@ import os       #для извлечения имени файла из пути
 import Add_spot2 as ast     # Для добавления области
 import random
 import json
+import New_Add_spot as asn
 
 # -*- coding: utf-8 -*-
 
@@ -107,8 +108,15 @@ if dark_spots:
             no_defects=False
             try:
                 max_num = [max(dark_spots_dict.items(), key=lambda k_v: k_v[0])][0][0]
-                test, x_add, y_add, contour_add = ast.main('Identified defects', temp2_image, pixel_per_cm, LH, LS, LV, UH, US, UV)
-                dark_spots_dict[max_num+1] = (test[0]+x_add-frame_start[0], test[1]+y_add-frame_start[1], test[2], test[3], test[4])
+                #test, x_add, y_add, contour_add = ast.main('Identified defects', temp2_image, pixel_per_cm, LH, LS, LV, UH, US, UV)
+                #dark_spots_dict[max_num+1] = (test[0]+x_add-frame_start[0], test[1]+y_add-frame_start[1], test[2], test[3], test[4])
+                init_x, init_y, new_contour = asn.main('Identified defects', temp2_image)
+                
+                area = cv2.contourArea(new_contour)
+                dimensions = ft.calculate_area(area, pixel_per_cm)
+                (x, y, w, h) = cv2.boundingRect(new_contour)
+                dark_spots_dict[max_num+1] = (init_x-frame_start[0]+x, init_y-frame_start[1]+y, w, h, dimensions)
+                #dark_spots_in_frame.append((x, y, w, h, dimensions))
                 
                 for new_spot_list in dark_spots_dict:
                     (x, y, w, h, dimensions) = dark_spots_dict[new_spot_list]

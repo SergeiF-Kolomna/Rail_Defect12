@@ -23,6 +23,7 @@
   <ItemGroup>
     <Compile Include="Add_spot2.py" />
     <Compile Include="Find_threshold_brown2.py" />
+    <Compile Include="New_Add_spot.py" />
     <Compile Include="Normalization_image.py" />
     <Compile Include="Rail_Defect12.py" />
   </ItemGroup>
